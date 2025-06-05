@@ -1,9 +1,11 @@
 import CardGroup from '@/components/CardGroup';
+import CreateRoomModal from '@/components/CreateRoomModal';
 import InputSendMessage from '@/components/InputSendMessage';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import clsx from 'clsx';
-import { Plus, Send } from 'lucide-react';
+import { Plus, PlusCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -19,6 +21,11 @@ interface SelectRoomData {
   room: string;
 }
 
+interface CreateRoom {
+  username: string;
+  room: string;
+}
+
 const socket = io('http://localhost:3000');
 
 export default function Chat() {
@@ -27,6 +34,13 @@ export default function Chat() {
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [joined, setJoined] = useState<boolean>(false);
+
+  const [createRoom, setCreateRoom] = useState<CreateRoom>({
+    username: 'Davi',
+    room: '',
+  });
+
+  const [createRoomModal, setCreateRoomModal] = useState<boolean>(false);
 
   function handleJoinRoom(): void {
     if (username !== '' && room !== '') {
@@ -80,13 +94,20 @@ export default function Chat() {
         <div className="w-2/3 bg-white border-r-1">
           <div className="h-16 flex items-center justify-between pl-2 pr-2 border-b-2">
             <h1 className="font-extrabold text-slate-900 text-2xl">Grupos</h1>
-            <Button
-              type="button"
-              variant="outline"
-              className="cursor-pointer"
-            >
-              <Plus/>
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={() => setCreateRoomModal(true)}
+                  type="button"
+                  variant="outline"
+                  className="cursor-pointer"
+                >
+                  <Plus />
+                </Button>
+              </DialogTrigger>
+
+              {createRoomModal && <CreateRoomModal />}
+            </Dialog>
           </div>
           <CardGroup />
           <CardGroup />
