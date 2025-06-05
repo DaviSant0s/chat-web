@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import clsx from 'clsx';
-import { Plus, PlusCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -34,6 +34,7 @@ export default function Chat() {
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [joined, setJoined] = useState<boolean>(false);
+  const [availableRooms, setAvailableRooms] = useState<string[]>([]);
 
   const [createRoom, setCreateRoom] = useState<CreateRoom>({
     username: 'Davi',
@@ -76,6 +77,23 @@ export default function Chat() {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchRooms = () => {
+      socket.emit('get_rooms', (rooms: string[]) => {
+        setAvailableRooms(rooms);
+      });
+    };
+
+    fetchRooms(); // Carrega inicialmente
+
+    // 🔔 Escuta atualizações de salas
+    socket.on('rooms_updated', fetchRooms);
+
+    return () => {
+      socket.off('rooms_updated', fetchRooms);
+    };
+  }, []);
+
   return (
     <Layout>
       <div
@@ -109,10 +127,13 @@ export default function Chat() {
               {createRoomModal && <CreateRoomModal />}
             </Dialog>
           </div>
-          <CardGroup />
-          <CardGroup />
-          <CardGroup />
-          <CardGroup />
+
+          {availableRooms && availableRooms.map((room, index) => (
+            <div key={index}>
+              <CardGroup name={room}/>
+            </div>
+          ))}
+
         </div>
         <div className="w-full h-full flex flex-col">
           <div className="h-16 flex items-center shrink-0 pl-2  border-b-2  bg-white">
