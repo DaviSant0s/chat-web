@@ -8,7 +8,7 @@ type LayoutProps = {
 export default function Layout({ children, className }: LayoutProps) {
   return (
     <div className={clsx('w-full h-screen')}>
-      <div className={clsx('max-w-[1500px] h-full m-auto px-5', className)}>
+      <div className={clsx('max-w-[1600px] h-full m-auto', className)}>
         {children}
       </div>
     </div>
