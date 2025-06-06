@@ -72,8 +72,8 @@ export default function Chat() {
   useEffect(() => {
     const usernameChat = localStorage.getItem('usernameChat');
 
-    if (!usernameChat) {
-      setAskUserName(true);
+    if (usernameChat !== '') {
+      setAskUserName(() => true);
     }
   }, [username]);
 

@@ -20,12 +20,17 @@ export default function AskUserNameModal({
   username,
   setAskUserName,
 }: AskUserName) {
-
   const saveUsernameLocalStorage = () => {
+
+    if (username.trim() === '') {
+      alert('Por favor, insira um nome de usuário.');
+      return;
+    }
+
     localStorage.setItem('usernameChat', username);
     setAskUserName(false);
-  }
-
+    
+  };
 
   return (
     <DialogContent>
@@ -34,13 +39,13 @@ export default function AskUserNameModal({
       </DialogHeader>
 
       <div className="flex flex-row items-center text-right gap-3">
-          <Input
-            onChange={(e) => setUsername(e.target.value)}
-            value={username}
-            className="col-span-3"
-            id="name"
-            placeholder='Digite seu nome de usuário'
-          />
+        <Input
+          onChange={(e) => setUsername(e.target.value)}
+          value={username}
+          className="col-span-3"
+          id="name"
+          placeholder="Digite seu nome de usuário"
+        />
 
         <DialogFooter>
           <DialogClose asChild>
