@@ -1,3 +1,4 @@
+import AskUserNameModal from '@/components/AskUserNameModal';
 import CardGroup from '@/components/CardGroup';
 import CreateRoomModal from '@/components/CreateRoomModal';
 import InputSendMessage from '@/components/InputSendMessage';
@@ -30,18 +31,16 @@ const socket = io('http://localhost:3000');
 
 export default function Chat() {
   const [room, setRoom] = useState<string>('');
-  const [username, setUsername] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [joined, setJoined] = useState<boolean>(false);
   const [availableRooms, setAvailableRooms] = useState<string[]>([]);
 
-  const [createRoom, setCreateRoom] = useState<CreateRoom>({
-    username: 'Davi',
-    room: '',
-  });
+  const [askUserName, setAskUserName] = useState<boolean>(true);
+  const [username, setUsername] = useState<string>('');
 
-  const [createRoomModal, setCreateRoomModal] = useState<boolean>(false);
+  console.log(askUserName);
+  console.log(username);
 
   function handleJoinRoom(): void {
     if (username !== '' && room !== '') {
@@ -66,6 +65,10 @@ export default function Chat() {
       setMessage('');
     }
   };
+
+  useEffect(() => {
+    setAskUserName(true);
+  }, []);
 
   useEffect(() => {
     socket.on('message', (newMessage) => {
@@ -112,10 +115,10 @@ export default function Chat() {
         <div className="w-2/3 bg-white border-r-1">
           <div className="h-16 flex items-center justify-between pl-2 pr-2 border-b-2">
             <h1 className="font-extrabold text-slate-900 text-2xl">Grupos</h1>
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button
-                  onClick={() => setCreateRoomModal(true)}
                   type="button"
                   variant="outline"
                   className="cursor-pointer"
@@ -124,16 +127,28 @@ export default function Chat() {
                 </Button>
               </DialogTrigger>
 
-              {createRoomModal && <CreateRoomModal />}
+              <CreateRoomModal
+                handleJoinRoom={handleJoinRoom}
+                setRoom={setRoom}
+                room={room}
+              />
+            </Dialog>
+
+            <Dialog open={askUserName}>
+              <AskUserNameModal
+                setAskUserName={setAskUserName}
+                setUsername={setUsername}
+                username={username}
+              />
             </Dialog>
           </div>
 
-          {availableRooms && availableRooms.map((room, index) => (
-            <div key={index}>
-              <CardGroup name={room}/>
-            </div>
-          ))}
-
+          {availableRooms &&
+            availableRooms.map((room, index) => (
+              <div key={index}>
+                <CardGroup name={room} />
+              </div>
+            ))}
         </div>
         <div className="w-full h-full flex flex-col">
           <div className="h-16 flex items-center shrink-0 pl-2  border-b-2  bg-white">

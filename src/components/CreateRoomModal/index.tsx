@@ -11,8 +11,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
+interface CreateRoomModal {
+  handleJoinRoom: () => void;
+  setRoom: React.Dispatch<React.SetStateAction<string>>;
+  room: string;
+}
 
-export default function CreateRoomModal() {
+
+export default function CreateRoomModal({ handleJoinRoom, setRoom, room }: CreateRoomModal) {
 
   return (
     <DialogContent>
@@ -21,12 +27,12 @@ export default function CreateRoomModal() {
         <DialogDescription>Crie uma nova sala no chat</DialogDescription>
       </DialogHeader>
 
-      <form className="space-y-6">
+      <div className="space-y-6">
         <div className="grid grid-cols-4 items-center text-right gap-3">
           <Label className="flex justify-end" htmlFor="name">
             Nome da Sala
           </Label>
-          <Input className="col-span-3" id="name"/>
+          <Input onChange={(e) => setRoom(e.target.value)} value={room} className="col-span-3" id="name"/>
         </div>
 
         <DialogFooter>
@@ -37,12 +43,12 @@ export default function CreateRoomModal() {
           </DialogClose>
 
           <DialogClose asChild>
-            <Button type="submit" className="cursor-pointer">
+            <Button onClick={handleJoinRoom} type="button" className="cursor-pointer">
               Salvar
             </Button>
           </DialogClose>
         </DialogFooter>
-      </form>
+      </div>
     </DialogContent>
   );
 }
