@@ -20,6 +20,13 @@ export default function AskUserNameModal({
   username,
   setAskUserName,
 }: AskUserName) {
+
+  const saveUsernameLocalStorage = () => {
+    localStorage.setItem('usernameChat', username);
+    setAskUserName(false);
+  }
+
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -38,7 +45,7 @@ export default function AskUserNameModal({
         <DialogFooter>
           <DialogClose asChild>
             <Button
-              onClick={() => setAskUserName(false)}
+              onClick={saveUsernameLocalStorage}
               type="button"
               className="cursor-pointer"
             >

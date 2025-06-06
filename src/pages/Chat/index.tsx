@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -36,11 +37,8 @@ export default function Chat() {
   const [joined, setJoined] = useState<boolean>(false);
   const [availableRooms, setAvailableRooms] = useState<string[]>([]);
 
-  const [askUserName, setAskUserName] = useState<boolean>(true);
+  const [askUserName, setAskUserName] = useState<boolean>(false);
   const [username, setUsername] = useState<string>('');
-
-  console.log(askUserName);
-  console.log(username);
 
   function handleJoinRoom(): void {
     if (username !== '' && room !== '') {
@@ -66,9 +64,18 @@ export default function Chat() {
     }
   };
 
+  const logOutUser = () => {
+    localStorage.clear();
+    setUsername('');
+  }
+
   useEffect(() => {
-    setAskUserName(true);
-  }, []);
+    const usernameChat = localStorage.getItem('usernameChat');
+
+    if (!usernameChat) {
+      setAskUserName(true);
+    }
+  }, [username]);
 
   useEffect(() => {
     socket.on('message', (newMessage) => {
@@ -151,8 +158,11 @@ export default function Chat() {
             ))}
         </div>
         <div className="w-full h-full flex flex-col">
-          <div className="h-16 flex items-center shrink-0 pl-2  border-b-2  bg-white">
+          <div className="h-16 flex items-center justify-between shrink-0 pl-2 pr-2  border-b-2  bg-white">
             <h1 className="font-extrabold text-slate-900 text-2xl">NodeJS</h1>
+            <Button onClick={logOutUser} type="button" variant="outline" className="cursor-pointer">
+              <LogOut color='red'/>
+            </Button>
           </div>
 
           <div className="flex flex-col h-full bg-gray-100">
