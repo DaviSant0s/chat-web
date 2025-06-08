@@ -9,7 +9,7 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
 interface Message {
@@ -17,16 +17,6 @@ interface Message {
   text: string;
   createdAt: string; // vindo como string do back-end (JSON)
   username: string;
-}
-
-interface SelectRoomData {
-  username: string;
-  room: string;
-}
-
-interface CreateRoom {
-  username: string;
-  room: string;
 }
 
 const socket = io('http://localhost:3000');
@@ -81,7 +71,6 @@ export default function Chat() {
     } else {
       setUsername(usernameChat);
     }
-
   }, []);
 
   useEffect(() => {
@@ -111,15 +100,15 @@ export default function Chat() {
     };
   }, []);
 
-
   useEffect(() => {
-
     const fetchMessages = () => {
       socket.emit('get_messages', (messages: Message[]) => {
-        const roomMessages = messages.filter((message) => message.room === room);
+        const roomMessages = messages.filter(
+          (message) => message.room === room
+        );
         setMessages(roomMessages);
-      })
-    }
+      });
+    };
 
     fetchMessages();
 
@@ -128,8 +117,7 @@ export default function Chat() {
     return () => {
       socket.off('messages_updated', fetchMessages);
     };
-
-  }, [room])
+  }, [room]);
 
   return (
     <Layout>
@@ -205,7 +193,11 @@ export default function Chat() {
                 ))}
             </div>
             <div className="max-h-fit pl-2 pr-2">
-              <InputSendMessage />
+              <InputSendMessage
+                message={message}
+                setMessage={setMessage}
+                handleSendMessage={handleSendMessage}
+              />
             </div>
           </div>
         </div>
