@@ -30,6 +30,7 @@ export default function Chat() {
 
   const [askUserName, setAskUserName] = useState<boolean>(false);
   const [username, setUsername] = useState<string>('');
+  const [roomJoined, setRoomJoined] = useState<string>('');
 
   function handleJoinRoom(): void {
     socket.emit(
@@ -45,6 +46,7 @@ export default function Chat() {
 
   const joinRoom = (roomName: string) => {
     setRoom(roomName);
+    setRoomJoined(roomName)
   };
 
   const handleSendMessage = () => {
@@ -61,6 +63,7 @@ export default function Chat() {
   const logOutUser = () => {
     localStorage.clear();
     setUsername('');
+    setAskUserName(true);
   };
 
   useEffect(() => {
@@ -166,7 +169,7 @@ export default function Chat() {
         </div>
         <div className="w-full h-full flex flex-col">
           <div className="h-16 flex items-center justify-between shrink-0 pl-2 pr-2  border-b-2  bg-white">
-            <h1 className="font-extrabold text-slate-900 text-2xl">{room}</h1>
+            <h1 className="font-extrabold text-slate-900 text-2xl">{roomJoined}</h1>
             <Button
               onClick={logOutUser}
               type="button"
@@ -183,11 +186,11 @@ export default function Chat() {
                 messages.map((msg, index) => (
                   <div key={index} className="w-full">
                     {msg.username === username && (
-                      <ChatBubble side="right" msg={msg.text} />
+                      <ChatBubble side="right" msg={msg.text}/>
                     )}
 
                     {msg.username !== username && (
-                      <ChatBubble side="left" msg={msg.text} />
+                      <ChatBubble side="left" msg={msg.text} username={msg.username}/>
                     )}
                   </div>
                 ))}

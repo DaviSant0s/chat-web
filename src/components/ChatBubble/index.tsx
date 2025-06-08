@@ -1,17 +1,16 @@
-import clsx from "clsx";
+import clsx from 'clsx';
 
 interface ChatBubble {
   side: 'left' | 'right';
   msg: string;
+  username?: string;
 }
 
-export default function ChatBubble({side, msg}: ChatBubble) {
-
+export default function ChatBubble({ side, msg, username }: ChatBubble) {
   const leftStyle = 'bg-white text-black rounded-bl-none';
   const rightStyle = 'bg-green-500 text-white rounded-br-none';
 
   const style = side === 'left' ? leftStyle : rightStyle;
-
 
   return (
     <div className="w-full">
@@ -26,6 +25,13 @@ export default function ChatBubble({side, msg}: ChatBubble) {
             style
           )}
         >
+          {username && (
+            <div>
+              <p className={clsx('text-xs', 'text-slate-600 font-bold')}>
+                {username}
+              </p>
+            </div>
+          )}
           {msg}
         </div>
       </div>
