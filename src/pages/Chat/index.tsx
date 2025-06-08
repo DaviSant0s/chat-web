@@ -1,5 +1,6 @@
 import AskUserNameModal from '@/components/AskUserNameModal';
 import CardGroup from '@/components/CardGroup';
+import ChatBubble from '@/components/ChatBubble';
 import CreateRoomModal from '@/components/CreateRoomModal';
 import InputSendMessage from '@/components/InputSendMessage';
 import Layout from '@/components/Layout';
@@ -8,7 +9,7 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
 interface Message {
@@ -41,17 +42,20 @@ export default function Chat() {
   const [username, setUsername] = useState<string>('');
 
   function handleJoinRoom(): void {
-    if (username !== '' && room !== '') {
-      socket.emit(
-        'select_room',
-        { username, room },
-        (roomMessages: Message[]) => {
-          setMessages(roomMessages);
-          setJoined(true);
-        }
-      );
-    }
+    socket.emit(
+      'select_room',
+      { username, room },
+      (roomMessages: Message[]) => {
+        console.log(roomMessages);
+        setMessages(roomMessages);
+        setJoined(true);
+      }
+    );
   }
+
+  const joinRoom = (roomName: string) => {
+    setRoom(roomName);
+  };
 
   const handleSendMessage = () => {
     if (message.trim() !== '') {
@@ -67,15 +71,18 @@ export default function Chat() {
   const logOutUser = () => {
     localStorage.clear();
     setUsername('');
-  }
+  };
 
   useEffect(() => {
     const usernameChat = localStorage.getItem('usernameChat');
 
-    if (usernameChat !== '') {
+    if (!usernameChat) {
       setAskUserName(() => true);
+    } else {
+      setUsername(usernameChat);
     }
-  }, [username]);
+
+  }, []);
 
   useEffect(() => {
     socket.on('message', (newMessage) => {
@@ -103,6 +110,26 @@ export default function Chat() {
       socket.off('rooms_updated', fetchRooms);
     };
   }, []);
+
+
+  useEffect(() => {
+
+    const fetchMessages = () => {
+      socket.emit('get_messages', (messages: Message[]) => {
+        const roomMessages = messages.filter((message) => message.room === room);
+        setMessages(roomMessages);
+      })
+    }
+
+    fetchMessages();
+
+    socket.on('messages_updated', fetchMessages);
+
+    return () => {
+      socket.off('messages_updated', fetchMessages);
+    };
+
+  }, [room])
 
   return (
     <Layout>
@@ -140,75 +167,55 @@ export default function Chat() {
                 room={room}
               />
             </Dialog>
-
-            <Dialog open={askUserName}>
-              <AskUserNameModal
-                setAskUserName={setAskUserName}
-                setUsername={setUsername}
-                username={username}
-              />
-            </Dialog>
           </div>
 
           {availableRooms &&
             availableRooms.map((room, index) => (
               <div key={index}>
-                <CardGroup name={room} />
+                <CardGroup name={room} joinRoom={joinRoom} />
               </div>
             ))}
         </div>
         <div className="w-full h-full flex flex-col">
           <div className="h-16 flex items-center justify-between shrink-0 pl-2 pr-2  border-b-2  bg-white">
-            <h1 className="font-extrabold text-slate-900 text-2xl">NodeJS</h1>
-            <Button onClick={logOutUser} type="button" variant="outline" className="cursor-pointer">
-              <LogOut color='red'/>
+            <h1 className="font-extrabold text-slate-900 text-2xl">{room}</h1>
+            <Button
+              onClick={logOutUser}
+              type="button"
+              variant="outline"
+              className="cursor-pointer"
+            >
+              <LogOut color="red" />
             </Button>
           </div>
 
           <div className="flex flex-col h-full bg-gray-100">
             <div className="w-full h-full flex-col p-2">
-              <div className="w-full">
-                <div className="flex justify-start mb-2">
-                  <div
-                    className={clsx(
-                      'max-w-2xs',
-                      'bg-white ',
-                      'text-black',
-                      'p-2',
-                      'rounded-lg',
-                      'rounded-bl-none',
-                      'shadow',
-                      'break-words'
+              {messages.length !== 0 &&
+                messages.map((msg, index) => (
+                  <div key={index} className="w-full">
+                    {msg.username === username && (
+                      <ChatBubble side="right" msg={msg.text} />
                     )}
-                  >
-                    Oii tudo bem??
-                  </div>
-                </div>
-              </div>
-              <div className="w-full">
-                <div className="flex justify-end mb-2">
-                  <div
-                    className={clsx(
-                      'max-w-xs',
-                      'bg-green-500',
-                      'text-white',
-                      'p-2',
-                      'rounded-lg',
-                      'rounded-br-none',
-                      'shadow',
-                      'break-words'
+
+                    {msg.username !== username && (
+                      <ChatBubble side="left" msg={msg.text} />
                     )}
-                  >
-                    Tudo sim! E você?
                   </div>
-                </div>
-              </div>
+                ))}
             </div>
             <div className="max-h-fit pl-2 pr-2">
               <InputSendMessage />
             </div>
           </div>
         </div>
+        <Dialog open={askUserName}>
+          <AskUserNameModal
+            setAskUserName={setAskUserName}
+            setUsername={setUsername}
+            username={username}
+          />
+        </Dialog>
       </div>
     </Layout>
   );
