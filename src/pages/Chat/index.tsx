@@ -33,24 +33,17 @@ export default function Chat() {
   const [roomJoined, setRoomJoined] = useState<string>('');
 
   function handleJoinRoom(): void {
-    socket.emit(
-      'select_room',
-      { username, room },
-      (roomMessages: Message[]) => {
-        console.log(roomMessages);
-        setMessages(roomMessages);
-        setJoined(true);
-      }
-    );
+    socket.emit('select_room', { username, room });
   }
 
   const joinRoom = (roomName: string) => {
     setRoom(roomName);
-    setRoomJoined(roomName)
+    setRoomJoined(roomName);
+    setJoined(true);
   };
 
   const handleSendMessage = () => {
-    if (message.trim() !== '') {
+    if (message.trim() !== '' && joined) {
       socket.emit('message', {
         room,
         message,
@@ -64,6 +57,7 @@ export default function Chat() {
     localStorage.clear();
     setUsername('');
     setAskUserName(true);
+    setJoined(false);
   };
 
   useEffect(() => {
@@ -169,7 +163,9 @@ export default function Chat() {
         </div>
         <div className="w-full h-full flex flex-col">
           <div className="h-16 flex items-center justify-between shrink-0 pl-2 pr-2  border-b-2  bg-white">
-            <h1 className="font-extrabold text-slate-900 text-2xl">{roomJoined}</h1>
+            <h1 className="font-extrabold text-slate-900 text-2xl">
+              {roomJoined}
+            </h1>
             <Button
               onClick={logOutUser}
               type="button"
@@ -186,11 +182,15 @@ export default function Chat() {
                 messages.map((msg, index) => (
                   <div key={index} className="w-full">
                     {msg.username === username && (
-                      <ChatBubble side="right" msg={msg.text}/>
+                      <ChatBubble side="right" msg={msg.text} />
                     )}
 
                     {msg.username !== username && (
-                      <ChatBubble side="left" msg={msg.text} username={msg.username}/>
+                      <ChatBubble
+                        side="left"
+                        msg={msg.text}
+                        username={msg.username}
+                      />
                     )}
                   </div>
                 ))}
