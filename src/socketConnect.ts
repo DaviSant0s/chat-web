@@ -1,3 +1,3 @@
 import { io } from 'socket.io-client';
 
-export const socketConnect = () => io('http://localhost:3000');
+export const socketConnect = () => io('https://chat-websocket-api-qixk.onrender.com/');
