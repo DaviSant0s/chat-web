@@ -12,6 +12,8 @@ import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+const socket = socketConnect();
+
 interface Message {
   room: string;
   text: string;
@@ -20,9 +22,6 @@ interface Message {
 }
 
 export default function Chat() {
-
-  const [socket] = useState(socketConnect());
-
   const [room, setRoom] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -37,7 +36,7 @@ export default function Chat() {
     socket.emit('select_room', { username, room }, (data: Message[]) => {
       setMessages(data);
     });
-    
+
     // Indica que o usuário logou na sala criada
     setRoomJoined(room);
     setJoined(true);
@@ -56,7 +55,6 @@ export default function Chat() {
         setMessages(data);
       }
     );
-
   };
 
   const handleSendMessage = () => {
