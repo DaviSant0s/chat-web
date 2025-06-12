@@ -6,22 +6,23 @@ import InputSendMessage from '@/components/InputSendMessage';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { socketConnect } from '@/socketConnect';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
 
 interface Message {
   room: string;
   text: string;
-  createdAt: string; // vindo como string do back-end (JSON)
+  createdAt: string;
   username: string;
 }
 
-const socket = io('http://localhost:3000');
-
 export default function Chat() {
+
+  const [socket] = useState(socketConnect());
+
   const [room, setRoom] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,14 +33,30 @@ export default function Chat() {
   const [username, setUsername] = useState<string>('');
   const [roomJoined, setRoomJoined] = useState<string>('');
 
-  function handleJoinRoom(): void {
-    socket.emit('select_room', { username, room });
+  function handleCreateRoom(): void {
+    socket.emit('select_room', { username, room }, (data: Message[]) => {
+      setMessages(data);
+    });
+    
+    // Indica que o usuário logou na sala criada
+    setRoomJoined(room);
+    setJoined(true);
   }
 
   const joinRoom = (roomName: string) => {
     setRoom(roomName);
     setRoomJoined(roomName);
     setJoined(true);
+
+    // Chama o evento que emite 'select_room' para o servidor
+    socket.emit(
+      'select_room',
+      { username, room: roomName },
+      (data: Message[]) => {
+        setMessages(data);
+      }
+    );
+
   };
 
   const handleSendMessage = () => {
@@ -57,6 +74,9 @@ export default function Chat() {
     localStorage.clear();
     setUsername('');
     setAskUserName(true);
+    setMessage('');
+    setMessages([]);
+    setRoomJoined('');
     setJoined(false);
   };
 
@@ -80,6 +100,7 @@ export default function Chat() {
     };
   }, []);
 
+  // Responsável por retornar todas as salas
   useEffect(() => {
     const fetchRooms = () => {
       socket.emit('get_rooms', (rooms: string[]) => {
@@ -96,25 +117,6 @@ export default function Chat() {
       socket.off('rooms_updated', fetchRooms);
     };
   }, []);
-
-  useEffect(() => {
-    const fetchMessages = () => {
-      socket.emit('get_messages', (messages: Message[]) => {
-        const roomMessages = messages.filter(
-          (message) => message.room === room
-        );
-        setMessages(roomMessages);
-      });
-    };
-
-    fetchMessages();
-
-    socket.on('messages_updated', fetchMessages);
-
-    return () => {
-      socket.off('messages_updated', fetchMessages);
-    };
-  }, [room]);
 
   return (
     <Layout>
@@ -147,7 +149,7 @@ export default function Chat() {
               </DialogTrigger>
 
               <CreateRoomModal
-                handleJoinRoom={handleJoinRoom}
+                handleCreateRoom={handleCreateRoom}
                 setRoom={setRoom}
                 room={room}
               />

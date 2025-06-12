@@ -12,13 +12,13 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 interface CreateRoomModal {
-  handleJoinRoom: () => void;
+  handleCreateRoom: () => void;
   setRoom: React.Dispatch<React.SetStateAction<string>>;
   room: string;
 }
 
 
-export default function CreateRoomModal({ handleJoinRoom, setRoom, room }: CreateRoomModal) {
+export default function CreateRoomModal({ handleCreateRoom, setRoom, room }: CreateRoomModal) {
 
   return (
     <DialogContent>
@@ -43,7 +43,7 @@ export default function CreateRoomModal({ handleJoinRoom, setRoom, room }: Creat
           </DialogClose>
 
           <DialogClose asChild>
-            <Button onClick={handleJoinRoom} type="button" className="cursor-pointer">
+            <Button onClick={handleCreateRoom} type="button" className="cursor-pointer">
               Salvar
             </Button>
           </DialogClose>
