@@ -10,8 +10,7 @@ import { socketConnect } from '@/services/socketConnect';
 import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import Worker from '@/workers/messageWorker?worker';
+import { useEffect, useState } from 'react';
 
 const socket = socketConnect();
 
@@ -23,9 +22,6 @@ interface Message {
 }
 
 export default function Chat() {
-
-  const messageWorkerRef = useRef<Worker | null>(null);
-
   const [room, setRoom] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,12 +32,6 @@ export default function Chat() {
   const [username, setUsername] = useState<string>('');
   const [roomJoined, setRoomJoined] = useState<string>('');
 
-  const workerRoomJoin = (roomName: string) => {
-    if(messageWorkerRef.current && username){
-      messageWorkerRef.current.postMessage({type: 'select_room', payload: {username, room: roomName}});
-    }
-  }
-
   function handleCreateRoom(): void {
     socket.emit('select_room', { username, room }, (data: Message[]) => {
       setMessages(data);
@@ -50,9 +40,6 @@ export default function Chat() {
     // Indica que o usuário logou na sala criada
     setRoomJoined(room);
     setJoined(true);
-
-    // loga na mesma sala dentro da thead
-    workerRoomJoin(room)
   }
 
   const joinRoom = (roomName: string) => {
@@ -68,9 +55,6 @@ export default function Chat() {
         setMessages(data);
       }
     );
-
-    // loga na mesma sala dentro da thead
-    workerRoomJoin(roomName)
   };
 
   const handleSendMessage = () => {
@@ -104,22 +88,14 @@ export default function Chat() {
     }
   }, []);
 
-  // Instancia o worker e ativa o ouvinte responsável por receber a nova mensagem
   useEffect(() => {
-
-    messageWorkerRef.current = new Worker();
-
-    messageWorkerRef.current.onmessage = (event) => {
-      const newMessage = event.data;
+    socket.on('message', (newMessage) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-    };
+    });
 
     return () => {
-      // Termina o worker
-      messageWorkerRef.current?.terminate();
-      messageWorkerRef.current = null;
-    }
-    
+      socket.off('message');
+    };
   }, []);
 
   // Responsável por retornar todas as salas
@@ -157,7 +133,7 @@ export default function Chat() {
       >
         <div className="w-2/3 bg-white border-r-1">
           <div className="h-16 flex items-center justify-between pl-2 pr-2 border-b-2">
-            <h1 className="font-extrabold text-slate-900 text-2xl">Salas</h1>
+            <h1 className="font-extrabold text-slate-900 text-2xl">Grupos</h1>
 
             <Dialog>
               <DialogTrigger asChild>
