@@ -23,12 +23,12 @@ interface Message {
 }
 
 export default function Chat() {
+
   const messageWorkerRef = useRef<Worker | null>(null);
 
   const [room, setRoom] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
-  // const [message_history, setMessage_history] = useState<Message[]>([]);
   const [joined, setJoined] = useState<boolean>(false);
   const [availableRooms, setAvailableRooms] = useState<string[]>([]);
 
@@ -37,25 +37,22 @@ export default function Chat() {
   const [roomJoined, setRoomJoined] = useState<string>('');
 
   const workerRoomJoin = (roomName: string) => {
-    if (messageWorkerRef.current && username) {
-      messageWorkerRef.current.postMessage({
-        type: 'select_room',
-        payload: { username, room: roomName },
-      });
+    if(messageWorkerRef.current && username){
+      messageWorkerRef.current.postMessage({type: 'select_room', payload: {username, room: roomName}});
     }
-  };
+  }
 
   function handleCreateRoom(): void {
-    socket.emit('select_room', { username, room });
+    socket.emit('select_room', { username, room }, (data: Message[]) => {
+      //setMessages(data);
+    });
 
     // Indica que o usuário logou na sala criada
     setRoomJoined(room);
     setJoined(true);
 
     // loga na mesma sala dentro da thead
-    workerRoomJoin(room);
-
-    // setMessages(message_history)
+    workerRoomJoin(room)
   }
 
   const joinRoom = (roomName: string) => {
@@ -64,12 +61,16 @@ export default function Chat() {
     setJoined(true);
 
     // Chama o evento que emite 'select_room' para o servidor
-    socket.emit('select_room', { username, room: roomName });
+    socket.emit(
+      'select_room',
+      { username, room: roomName },
+      (data: Message[]) => {
+        //setMessages(data);
+      }
+    );
 
     // loga na mesma sala dentro da thead
-    workerRoomJoin(roomName);
-
-    // setMessages(message_history)
+    workerRoomJoin(roomName)
   };
 
   const handleSendMessage = () => {
@@ -105,27 +106,20 @@ export default function Chat() {
 
   // Instancia o worker e ativa o ouvinte responsável por receber a nova mensagem
   useEffect(() => {
+
     messageWorkerRef.current = new Worker();
 
     messageWorkerRef.current.onmessage = (event) => {
-
-      const { type, payload } = event.data;
-
-      if (type === 'new_message') {
-        setMessages((prevMessages) => [...prevMessages, payload]);
-      }
-
-      if (type === 'message_history') {
-        setMessages(payload)
-      }
-
+      const newMessage = event.data;
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     };
 
     return () => {
       // Termina o worker
       messageWorkerRef.current?.terminate();
       messageWorkerRef.current = null;
-    };
+    }
+    
   }, []);
 
   // Responsável por retornar todas as salas

@@ -27,6 +27,10 @@ self.onmessage = (event: MessageEvent) => {
 
 socket.on('message', (message: Message) => {
   if (message.room === currentRoom) {
-    self.postMessage(message);
+    self.postMessage({type: 'new_message', payload: message});
   }
 });
+
+socket.on('message_history', (messages: Message[]) => {
+  self.postMessage({type: 'message_history', payload: messages});
+})
