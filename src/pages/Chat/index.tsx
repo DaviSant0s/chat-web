@@ -12,8 +12,13 @@ import { Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Worker from '@/workers/messageWorker?worker';
+import { type Socket } from 'socket.io-client';
+import { socketMonitorConnect } from '@/services/socketMonitorConnect';
 
-const socket = socketConnect();
+// const socket = socketConnect();
+
+// Socket que vai fazer o monitoramento
+const socket_monitor = socketMonitorConnect();
 
 interface Message {
   room: string;
@@ -23,12 +28,15 @@ interface Message {
 }
 
 export default function Chat() {
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  const socketRef = useRef<Socket | null>(null);
+
   const messageWorkerRef = useRef<Worker | null>(null);
 
   const [room, setRoom] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
-  // const [message_history, setMessage_history] = useState<Message[]>([]);
   const [joined, setJoined] = useState<boolean>(false);
   const [availableRooms, setAvailableRooms] = useState<string[]>([]);
 
@@ -46,40 +54,42 @@ export default function Chat() {
   };
 
   function handleCreateRoom(): void {
-    socket.emit('select_room', { username, room });
+    if (socket) {
+      socket.emit('select_room', { username, room });
 
-    // Indica que o usuário logou na sala criada
-    setRoomJoined(room);
-    setJoined(true);
+      // Indica que o usuário logou na sala criada
+      setRoomJoined(room);
+      setJoined(true);
 
-    // loga na mesma sala dentro da thead
-    workerRoomJoin(room);
-
-    // setMessages(message_history)
+      // loga na mesma sala dentro da thead
+      workerRoomJoin(room);
+    }
   }
 
   const joinRoom = (roomName: string) => {
-    setRoom(roomName);
-    setRoomJoined(roomName);
-    setJoined(true);
+    if (socket) {
+      setRoom(roomName);
+      setRoomJoined(roomName);
+      setJoined(true);
 
-    // Chama o evento que emite 'select_room' para o servidor
-    socket.emit('select_room', { username, room: roomName });
+      // Chama o evento que emite 'select_room' para o servidor
+      socket.emit('select_room', { username, room: roomName });
 
-    // loga na mesma sala dentro da thead
-    workerRoomJoin(roomName);
-
-    // setMessages(message_history)
+      // loga na mesma sala dentro da thead
+      workerRoomJoin(roomName);
+    }
   };
 
   const handleSendMessage = () => {
-    if (message.trim() !== '' && joined) {
-      socket.emit('message', {
-        room,
-        message,
-        username,
-      });
-      setMessage('');
+    if (socket) {
+      if (message.trim() !== '' && joined) {
+        socket.emit('message', {
+          room,
+          message,
+          username,
+        });
+        setMessage('');
+      }
     }
   };
 
@@ -92,6 +102,73 @@ export default function Chat() {
     setRoomJoined('');
     setJoined(false);
   };
+
+  useEffect(() => {
+
+    const connect_server = async () => {
+
+      try {
+
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+
+        const socket_connected = await socketConnect();
+
+        socketRef.current = socket_connected;
+        setSocket(socket_connected);
+
+      } catch (error) {
+
+        console.log("Erro ao conectar:", error);
+
+      }
+
+    };
+    
+    const change_server = async () => {
+
+      try {
+
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+
+        const socket_connected = await socketConnect();
+
+        socketRef.current = socket_connected;
+        setSocket(socket_connected);
+        
+        // Notifica o worker para trocar de servidor
+        messageWorkerRef.current?.postMessage({
+          type: 'change_server',
+          payload: {},
+        });
+        
+        console.log('Servidor principal caiu. Conectado ao servidor de backup.');
+        
+      } catch (error) {
+        console.log('Falha ao conectar no segundo servidor:', error)
+      }
+
+    }
+
+    connect_server();
+
+
+    //Escuta atualizações de salas
+    socket_monitor.on('server_changed', change_server);
+
+    return () => {
+      socket_monitor.off('server_changed', change_server);
+
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+      
+    };
+    
+  }, []);
 
   useEffect(() => {
     const usernameChat = localStorage.getItem('usernameChat');
@@ -108,7 +185,6 @@ export default function Chat() {
     messageWorkerRef.current = new Worker();
 
     messageWorkerRef.current.onmessage = (event) => {
-
       const { type, payload } = event.data;
 
       if (type === 'new_message') {
@@ -116,9 +192,8 @@ export default function Chat() {
       }
 
       if (type === 'message_history') {
-        setMessages(payload)
+        setMessages(payload);
       }
-
     };
 
     return () => {
@@ -131,20 +206,26 @@ export default function Chat() {
   // Responsável por retornar todas as salas
   useEffect(() => {
     const fetchRooms = () => {
+      if (!socket) return;
+
       socket.emit('get_rooms', (rooms: string[]) => {
         setAvailableRooms(rooms);
       });
     };
 
-    fetchRooms(); // Carrega inicialmente
+    if (socket) {
+      fetchRooms(); // Carrega inicialmente
 
-    // 🔔 Escuta atualizações de salas
-    socket.on('rooms_updated', fetchRooms);
+      // Escuta atualizações de salas
+      socket.on('rooms_updated', fetchRooms);
+    }
 
     return () => {
-      socket.off('rooms_updated', fetchRooms);
+      if (socket) {
+        socket.off('rooms_updated', fetchRooms);
+      }
     };
-  }, []);
+  }, [socket]);
 
   return (
     <Layout>
