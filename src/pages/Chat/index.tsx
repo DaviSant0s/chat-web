@@ -82,6 +82,7 @@ export default function Chat() {
 
   const shutdown_server = () => {
     if (socket) {
+      console.log('Derrubando servidor')
       socket.emit('shutdown_server');
     }
   };
