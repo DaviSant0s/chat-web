@@ -13,7 +13,7 @@ const connectSocket = (url: string): Promise<Socket> => {
 
 const waitForServer = async (url: string) => {
 
-  const tempoTotal = 3000; // 5 segundos
+  const tempoTotal = 1000; // 5 segundos
   const intervalo = 500; // tenta a cada 0.5 segundos
   const tentativas = tempoTotal / intervalo;
 
