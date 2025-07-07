@@ -126,6 +126,7 @@ export default function Chat() {
     };
 
     const change_server = async () => {
+      console.log('Servidor principal caiu. Conectado ao servidor de backup.');
       try {
         if (socketRef.current) {
           socketRef.current.disconnect();
@@ -141,10 +142,6 @@ export default function Chat() {
           type: 'change_server',
           payload: {},
         });
-
-        console.log(
-          'Servidor principal caiu. Conectado ao servidor de backup.'
-        );
       } catch (error) {
         console.log('Falha ao conectar no segundo servidor:', error);
       }
@@ -272,7 +269,7 @@ export default function Chat() {
               {roomJoined}
             </h1>
 
-            <div className='flex gap-1'>
+            <div className="flex gap-1">
               <Button
                 onClick={shutdown_server}
                 type="button"
