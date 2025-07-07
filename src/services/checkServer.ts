@@ -7,7 +7,7 @@ export const checkServer = async (url: string): Promise<void> => {
   // cancelando a requisição fetch através do signal.
   // Isso evita que o fetch fique "pendurado" indefinidamente.
 
-  const timer = setTimeout(() => controller.abort(), 2000)
+  const timer = setTimeout(() => controller.abort(), 1000)
 
   try {
     
