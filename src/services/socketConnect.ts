@@ -37,6 +37,7 @@ export const socketConnect = async (): Promise<Socket> => {
 
     await waitForServer('https://main-server-chat.onrender.com');
 
+    console.log('Conectando ao servidor principal');
     return await connectSocket('https://main-server-chat.onrender.com');
 
   } catch {
@@ -47,6 +48,7 @@ export const socketConnect = async (): Promise<Socket> => {
 
       await waitForServer('https://backup-server-chat.onrender.com');
 
+      console.log('Conectando ao servidor de backup');
       return await connectSocket('https://backup-server-chat.onrender.com');
 
     } catch {
