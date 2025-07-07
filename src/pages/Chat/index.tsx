@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { socketConnect } from '@/services/socketConnect';
 import clsx from 'clsx';
-import { Plus } from 'lucide-react';
+import { CircleX, Plus } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Worker from '@/workers/messageWorker?worker';
@@ -80,6 +80,12 @@ export default function Chat() {
     }
   };
 
+  const shutdown_server = () => {
+    if (socket) {
+      socket.emit('shutdown_server');
+    }
+  };
+
   const handleSendMessage = () => {
     if (socket) {
       if (message.trim() !== '' && joined) {
@@ -104,11 +110,8 @@ export default function Chat() {
   };
 
   useEffect(() => {
-
     const connect_server = async () => {
-
       try {
-
         if (socketRef.current) {
           socketRef.current.disconnect();
         }
@@ -117,19 +120,13 @@ export default function Chat() {
 
         socketRef.current = socket_connected;
         setSocket(socket_connected);
-
       } catch (error) {
-
-        console.log("Erro ao conectar:", error);
-
+        console.log('Erro ao conectar:', error);
       }
-
     };
-    
+
     const change_server = async () => {
-
       try {
-
         if (socketRef.current) {
           socketRef.current.disconnect();
         }
@@ -138,23 +135,22 @@ export default function Chat() {
 
         socketRef.current = socket_connected;
         setSocket(socket_connected);
-        
+
         // Notifica o worker para trocar de servidor
         messageWorkerRef.current?.postMessage({
           type: 'change_server',
           payload: {},
         });
-        
-        console.log('Servidor principal caiu. Conectado ao servidor de backup.');
-        
-      } catch (error) {
-        console.log('Falha ao conectar no segundo servidor:', error)
-      }
 
-    }
+        console.log(
+          'Servidor principal caiu. Conectado ao servidor de backup.'
+        );
+      } catch (error) {
+        console.log('Falha ao conectar no segundo servidor:', error);
+      }
+    };
 
     connect_server();
-
 
     //Escuta atualizações de salas
     socket_monitor.on('server_changed', change_server);
@@ -165,9 +161,7 @@ export default function Chat() {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
-      
     };
-    
   }, []);
 
   useEffect(() => {
@@ -277,14 +271,27 @@ export default function Chat() {
             <h1 className="font-extrabold text-slate-900 text-2xl">
               {roomJoined}
             </h1>
-            <Button
-              onClick={logOutUser}
-              type="button"
-              variant="outline"
-              className="cursor-pointer"
-            >
-              <LogOut color="red" />
-            </Button>
+
+            <div className='flex gap-1'>
+              <Button
+                onClick={shutdown_server}
+                type="button"
+                variant="outline"
+                className="cursor-pointer"
+              >
+                Derrubar
+                <CircleX />
+              </Button>
+
+              <Button
+                onClick={logOutUser}
+                type="button"
+                variant="outline"
+                className="cursor-pointer"
+              >
+                <LogOut color="red" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col h-full bg-gray-100">
