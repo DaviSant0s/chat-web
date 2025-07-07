@@ -45,9 +45,9 @@ export const socketConnect = async (): Promise<Socket> => {
 
       // await new Promise(res => setTimeout(res, 2000)); 
 
-      await waitForServer('http://localhost:3001');
+      await waitForServer('https://backup-server-chat.onrender.com');
 
-      return await connectSocket('http://localhost:3001');;
+      return await connectSocket('https://backup-server-chat.onrender.com');;
 
     } catch {
 
