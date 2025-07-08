@@ -150,8 +150,15 @@ export default function Chat() {
 
     connect_server();
 
-    //Escuta atualizações de salas
+    //verifica se o sevidor caiu
     socket_monitor.on('server_changed', change_server);
+
+    // io.emit('status_monitor', {'status': 'Analizando o servidor backup'})
+
+    //informa qual sevidor está sendo monitorando
+    socket_monitor.on('status_monitor', (data) => {
+      console.log(data.status)
+    });
 
     return () => {
       socket_monitor.off('server_changed', change_server);

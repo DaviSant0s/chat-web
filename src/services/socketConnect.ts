@@ -34,22 +34,28 @@ const waitForServer = async (url: string) => {
 export const socketConnect = async (): Promise<Socket> => {
 
   try {
+  
+    const url = 'https://main-server-chat.onrender.com';
+    // const url = 'http://localhost:3000';
 
-    await waitForServer('https://main-server-chat.onrender.com');
+    await waitForServer(url);
 
     console.log('Conectando ao servidor principal');
-    return await connectSocket('https://main-server-chat.onrender.com');
+    return await connectSocket(url);
 
   } catch {
 
     try {
+    
+      const url = 'https://backup-server-chat.onrender.com';
+      //const url = 'http://localhost:3001';
 
       // await new Promise(res => setTimeout(res, 2000)); 
 
-      await waitForServer('https://backup-server-chat.onrender.com');
+      await waitForServer(url);
 
       console.log('Conectando ao servidor de backup');
-      return await connectSocket('https://backup-server-chat.onrender.com');
+      return await connectSocket(url);
 
     } catch {
 

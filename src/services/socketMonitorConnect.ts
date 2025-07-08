@@ -1,3 +1,6 @@
 import { io } from 'socket.io-client';
 
-export const socketMonitorConnect = () => io('https://server-monitor-hwy9.onrender.com');
+const url = 'https://server-monitor-hwy9.onrender.com';
+// const url = 'http://localhost:3002';
+
+export const socketMonitorConnect = () => io(url);
